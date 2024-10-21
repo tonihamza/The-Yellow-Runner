@@ -35,16 +35,21 @@ Public Sub StartGame()
     MoveIntervalBlue = 100 ' Example: 200 milliseconds
     MoveIntervalPurple = 100 ' Example: 200 milliseconds
     MoveIntervalBrown = 100 ' Example: 200 milliseconds for brown cells
-    MoveIntervalMagenta = 100
+    MoveIntervalMagenta = 300
+    space = True
 
-    If level = 0 Then level = 24
+    If level = 0 Then
+    level = 1
+    End If
+    
     Call ResetGame
+    
     Range("AG31").Select
 
     ' Determine actions based on the current level
     Range("S4:AT31").Interior.color = RGB(255, 255, 255)
     ActiveSheet.Cells.FormatConditions.Delete
-    p = 784
+    p = 600
     Select Case level
         Case 1
             p = 784
@@ -211,6 +216,179 @@ Public Sub StartGame()
         Case 27
             purplePosH = Array("S4", "S6", "S8", "S10", "S12", "S14", "S16", "S18", "S20", "S22", "S24", "S26", "S28", "S30", "AT5", "AT7", "AT9", "AT11", "AT13", "AT15", "AT17", "AT19", "AT21", "AT23", "AT25", "AT27", "AT29", "AT31")
             MoveIntervalPurple = 400
+        Case 28
+            magentaPos = Array(Array("U6", "U29"), Array("U29", "AR29"), Array("U6", "AR6"), Array("AR6", "AR29"), Array("Y10", "Y25"), Array("Y25", "AN25"), Array("Y10", "AN10"), Array("AN10", "AN25"))
+        Case 29
+            brownPos = Array("S9", "AT9")
+        Case 30
+            brownPos = Array("S9", "S26", "AT9", "AT26")
+        Case 31
+             magentaPos = Array(Array("Y3", "Y32"), Array("AN3", "AN32"), Array("R10", "AU10"), Array("R25", "AU25"))
+             redPos = Array("S4", "AT4")
+        Case 32
+            magentaPos = Array(Array("U6", "U29"), Array("U29", "AR29"), Array("U6", "AR6"), Array("AR6", "AR29"), Array("Y10", "Y25"), Array("Y25", "AN25"), Array("Y10", "AN10"), Array("AN10", "AN25"))
+            bluePos = Array("S9", "S26")
+        Case 33
+            For i = 0 To 6
+                Set rng = Range("T5:T30").offset(0, 2 * i)
+                rng.Interior.color = RGB(0, 0, 0)
+            Next i
+            For i = 0 To 6
+                Set rng = Range("AG5:AG30").offset(0, 2 * i)
+                rng.Interior.color = RGB(0, 0, 0)
+            Next i
+            magentaPos = Array(Array("R17", "AU17"), Array("R10", "AU10"), Array("R25", "AU25"))
+        Case 34
+            
+        Case 35
+            magentaPos = Array( _
+                Array("R4", "AU4"), _
+                Array("R6", "AU6"), _
+                Array("R8", "AU8"), _
+                Array("R10", "AU10"), _
+                Array("R12", "AU12"), _
+                Array("R14", "AU14"), _
+                Array("R16", "AU16"), _
+                Array("R18", "AU18"), _
+                Array("R20", "AU20"), _
+                Array("R22", "AU22"), _
+                Array("R24", "AU24"), _
+                Array("R26", "AU26"), _
+                Array("R28", "AU28"), _
+                Array("R30", "AU30"))
+        Case 36
+            magentaPos = Array( _
+                Array("T4", "T32"), _
+                Array("V4", "V32"), _
+                Array("X4", "X32"), _
+                Array("Z4", "Z32"), _
+                Array("AB4", "AB32"), _
+                Array("AD4", "AD32"), _
+                Array("AF4", "AF32"), _
+                Array("AH4", "AH32"), _
+                Array("AJ4", "AJ32"), _
+                Array("AL4", "AL32"), _
+                Array("AN4", "AN32"), _
+                Array("AP4", "AP32"), _
+                Array("AR4", "AR32"), _
+                Array("AT4", "AT32"))
+        Case 37
+            Range("W9:X10").Interior.color = RGB(0, 0, 0)
+            Range("W17:X18").Interior.color = RGB(0, 0, 0)
+            Range("W25:X26").Interior.color = RGB(0, 0, 0)
+            Range("AF9:AG10").Interior.color = RGB(0, 0, 0)
+            Range("AF17:AG18").Interior.color = RGB(0, 0, 0)
+            Range("AF25:AG26").Interior.color = RGB(0, 0, 0)
+            Range("AO9:AP10").Interior.color = RGB(0, 0, 0)
+            Range("AO17:AP18").Interior.color = RGB(0, 0, 0)
+            Range("AO25:AP26").Interior.color = RGB(0, 0, 0)
+            magentaPos = Array(Array("AB3", "AB32"), Array("AK3", "AK32"), Array("R13", "AU13"), Array("R22", "AU22"))
+        Case 38
+            Range("W9:X10").Interior.color = RGB(0, 0, 0)
+            Range("W17:X18").Interior.color = RGB(0, 0, 0)
+            Range("W25:X26").Interior.color = RGB(0, 0, 0)
+            Range("AF9:AG10").Interior.color = RGB(0, 0, 0)
+            Range("AF17:AG18").Interior.color = RGB(0, 0, 0)
+            Range("AF25:AG26").Interior.color = RGB(0, 0, 0)
+            Range("AO9:AP10").Interior.color = RGB(0, 0, 0)
+            Range("AO17:AP18").Interior.color = RGB(0, 0, 0)
+            Range("AO25:AP26").Interior.color = RGB(0, 0, 0)
+            brownPos = Array("S9", "AT9")
+        Case 39
+            purplePosV = Array("S11", "AT23", "AA4", "AL31")
+            purplePosH = Array("AA4", "AL31", "S11", "AT23")
+            brownPos = Array("S9", "AT9")
+        Case 40
+            brownPos = Array("S9", "S26", "AT9", "AT26")
+            redPos = Array("S4", "AT4")
+        Case 41
+            Range("W9:X10").Interior.color = RGB(0, 0, 0)
+            Range("W17:X18").Interior.color = RGB(0, 0, 0)
+            Range("W25:X26").Interior.color = RGB(0, 0, 0)
+            Range("AF9:AG10").Interior.color = RGB(0, 0, 0)
+            Range("AF17:AG18").Interior.color = RGB(0, 0, 0)
+            Range("AF25:AG26").Interior.color = RGB(0, 0, 0)
+            Range("AO9:AP10").Interior.color = RGB(0, 0, 0)
+            Range("AO17:AP18").Interior.color = RGB(0, 0, 0)
+            Range("AO25:AP26").Interior.color = RGB(0, 0, 0)
+            brownPos = Array("S9", "S26", "AT9", "AT26")
+        Case 42
+            Range("U14:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AJ29").Interior.color = RGB(0, 0, 0)
+            Range("AC6:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ6:AJ14").Interior.color = RGB(0, 0, 0)
+            Range("AJ14:AR14").Interior.color = RGB(0, 0, 0)
+            Range("U21:AC21").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AR21").Interior.color = RGB(0, 0, 0)
+            Range("AC21:AC29").Interior.color = RGB(0, 0, 0)
+            bluePos = Array("S9", "AT9", "S29", "AT29")
+            purplePosH = Array("AF17")
+            purplePosV = Array("AF17")
+        Case 43
+            Range("U14:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AJ29").Interior.color = RGB(0, 0, 0)
+            Range("AC6:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ6:AJ14").Interior.color = RGB(0, 0, 0)
+            Range("AJ14:AR14").Interior.color = RGB(0, 0, 0)
+            Range("U21:AC21").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AR21").Interior.color = RGB(0, 0, 0)
+            Range("AC21:AC29").Interior.color = RGB(0, 0, 0)
+            magentaPos = Array(Array("U6", "U29"), Array("U29", "AR29"), Array("U6", "AR6"), Array("AR6", "AR29"), Array("Y10", "Y25"), Array("Y25", "AN25"), Array("Y10", "AN10"), Array("AN10", "AN25"))
+        Case 44
+            Range("U14:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AJ29").Interior.color = RGB(0, 0, 0)
+            Range("AC6:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ6:AJ14").Interior.color = RGB(0, 0, 0)
+            Range("AJ14:AR14").Interior.color = RGB(0, 0, 0)
+            Range("U21:AC21").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AR21").Interior.color = RGB(0, 0, 0)
+            Range("AC21:AC29").Interior.color = RGB(0, 0, 0)
+            magentaPos = Array(Array("U6", "U29"), Array("U29", "AR29"), Array("U6", "AR6"), Array("AR6", "AR29"), Array("Y10", "Y25"), Array("Y25", "AN25"), Array("Y10", "AN10"), Array("AN10", "AN25"))
+            redPos = Array("S4", "AT4")
+        Case 45
+            Range("U14:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AJ29").Interior.color = RGB(0, 0, 0)
+            Range("AC6:AC14").Interior.color = RGB(0, 0, 0)
+            Range("AJ6:AJ14").Interior.color = RGB(0, 0, 0)
+            Range("AJ14:AR14").Interior.color = RGB(0, 0, 0)
+            Range("U21:AC21").Interior.color = RGB(0, 0, 0)
+            Range("AJ21:AR21").Interior.color = RGB(0, 0, 0)
+            Range("AC21:AC29").Interior.color = RGB(0, 0, 0)
+            purplePosH = Array("AF17")
+            purplePosV = Array("AF17")
+            redPos = Array("S4", "AT4")
+            magentaPos = Array(Array("X3", "X32"), Array("AO3", "AO32"), Array("R9", "AU9"), Array("R26", "AU26"))
+        Case 46
+            Range("Y7:AN7").Interior.color = RGB(0, 0, 0)
+            Range("Y11:AN11").Interior.color = RGB(0, 0, 0)
+            Range("Y15:AN15").Interior.color = RGB(0, 0, 0)
+            Range("Y20:AN20").Interior.color = RGB(0, 0, 0)
+            Range("Y24:AN24").Interior.color = RGB(0, 0, 0)
+            Range("Y28:AN28").Interior.color = RGB(0, 0, 0)
+            purplePosH = Array("AT5", "S9", "AT13", "S17", "AT18", "S22", "AT26", "S30")
+        Case 47
+            Range("Y7:AN7").Interior.color = RGB(0, 0, 0)
+            Range("Y11:AN11").Interior.color = RGB(0, 0, 0)
+            Range("Y15:AN15").Interior.color = RGB(0, 0, 0)
+            Range("Y20:AN20").Interior.color = RGB(0, 0, 0)
+            Range("Y24:AN24").Interior.color = RGB(0, 0, 0)
+            Range("Y28:AN28").Interior.color = RGB(0, 0, 0)
+            magentaPos = Array(Array("Y7", "Y28"), Array("AN7", "AN28"))
+            purplePosH = Array("S17", "AT18")
+            purplePosV = Array("U4", "AR4", "AQ31", "V31")
+        Case 48
+            Range("Y7:AN7").Interior.color = RGB(0, 0, 0)
+            Range("Y11:AN11").Interior.color = RGB(0, 0, 0)
+            Range("Y15:AN15").Interior.color = RGB(0, 0, 0)
+            Range("Y20:AN20").Interior.color = RGB(0, 0, 0)
+            Range("Y24:AN24").Interior.color = RGB(0, 0, 0)
+            Range("Y28:AN28").Interior.color = RGB(0, 0, 0)
+            bluePos = Array("S4", "S8", "S17", "S21", "AT4", "AT8", "AT17", "AT21", "S31", "AT31")
+        Case 49
+            magentaPos = Array(Array("R16", "AU16"), Array("R17", "AU17"), Array("R9", "AU9"), Array("R10", "AU10"), Array("R23", "AU23"), Array("R24", "AU24"), Array("Z3", "Z32"), Array("Y3", "Y32"), Array("AM3", "AM32"), Array("AN3", "AN32"))
+        Case 50
+            magentaPos = Array(Array("R16", "AU16"), Array("R17", "AU17"), Array("R9", "AU9"), Array("R10", "AU10"), Array("R23", "AU23"), Array("R24", "AU24"))
+            bluePos = Array("S9", "AT9", "S29", "AT29")
         Case Else
             MsgBox "You finished the game!", vbExclamation
             Exit Sub
@@ -231,6 +409,7 @@ Sub ResetGame()
     Call StopTimerBlue
     Call StopTimerPurple
     Call StopTimerBrown ' Stop timer for brown cells
+    Call StopTimerMagenta
     
     Range("S4:AT31").Interior.color = RGB(255, 255, 255)
     ActiveSheet.Cells.FormatConditions.Delete
@@ -249,6 +428,7 @@ Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePosit
     Dim blueCell As blueCell
     Dim purpleCellH As PurpleCell ' Horizontal purple cell
     Dim purpleCellV As PurpleCell ' Vertical purple cell
+    Dim magentaCell As magentaCell
     Dim brownCell As brownCell ' Brown cell
     Dim i As Integer
     Dim targetCell1 As Range
@@ -333,7 +513,6 @@ Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePosit
     ' Check if magentaPositions array is not empty and initialize magenta cell objects
 If Not IsEmpty(magentaPositions) Then
     For i = LBound(magentaPositions) To UBound(magentaPositions)
-        Dim magentaCell As magentaCell
         Set magentaCell = New magentaCell
         magentaCell.Initialize magentaPositions(i) ' Initialize magenta cell with string
         MagentaCells.Add magentaCell
@@ -492,7 +671,7 @@ Sub MoveBrownCells()
 End Sub
 ' Timer for magenta cells
 Public Sub StartTimerMagenta()
-    TimerIDMagenta = SetTimer(0, 0, MoveIntervalMagenta, AddressOf TimerMagentaHandler)
+    TimerIDMagenta = SetTimer(0, 0, MoveIntervalMagenta, AddressOf TimerEventMagenta)
 End Sub
 
 ' Stop timer for magenta cells
@@ -504,15 +683,19 @@ Public Sub StopTimerMagenta()
 End Sub
 
 ' Handler for magenta cell movements
-Public Sub TimerMagentaHandler()
+Sub TimerEventMagenta()
+    On Error Resume Next
+    Call MoveMagentaCells
+End Sub
+Sub MoveMagentaCells()
     Dim magentaCell As magentaCell
     Dim i As Integer
-    For i = 1 To BrownCells.count
+
+    For i = 1 To MagentaCells.count
         Set magentaCell = MagentaCells(i)
         magentaCell.Move
     Next i
 End Sub
-
 
 ' Stop all timers
 Public Sub StopAllTimers()
@@ -520,5 +703,10 @@ Public Sub StopAllTimers()
     StopTimerBlue
     StopTimerPurple
     StopTimerBrown
+    StopTimerMagenta
     Call StopTimerSelection
+    space = True
+End Sub
+Sub levelup()
+level = level + 1
 End Sub
