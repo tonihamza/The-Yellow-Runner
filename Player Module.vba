@@ -26,12 +26,13 @@ Public Declare Function KillTimer Lib "User32" ( _
 Public TimerID As Long
 #End If
 
-' Movement direction variables
+' Movement direction
 Public DirectionRow As Long
 Public DirectionCol As Long
 Public TempDirectionRow As Long ' Temporary direction row
 Public TempDirectionCol As Long ' Temporary direction col
 Public go As Boolean
+Public space As Boolean
 
 ' Constants
 Const MoveIntervalSelection = 50 ' Time interval for each movement in milliseconds
@@ -76,30 +77,25 @@ Sub MoveSelection()
     currentCell.Interior.color = RGB(255, 255, 0) ' Mark current cell as visited
 
     ' Check if we can apply the new direction (temp direction)
-    If Not IsCellBlocked(currentCell.Offset(TempDirectionRow, TempDirectionCol)) Then
+    If Not IsCellBlocked(currentCell.offset(TempDirectionRow, TempDirectionCol)) Then
         DirectionRow = TempDirectionRow
         DirectionCol = TempDirectionCol
     End If
     
     ' Calculate the next cell based on the (updated) direction
-    Set nextCell = currentCell.Offset(DirectionRow, DirectionCol)
-
-    If Not IsCellBlocked(nextCell) Then
-        nextCell.Select
-    End If
-
-    ' Check if next cell has any conditional formats and stop the game if it does
-    If nextCell.FormatConditions.Count > 0 And go Then
+    If currentCell.FormatConditions.count > 0 And go Then
         go = False
         Call StopAllTimers
         MsgBox "Game Over", vbInformation
         Call StartGame
     End If
     
+    Set nextCell = currentCell.offset(DirectionRow, DirectionCol)
+
+    If Not IsCellBlocked(nextCell) Then nextCell.Select
     ' Count cells that are black or yellow
     blackOrYellowCount = CountBlackOrYellowCells()
 
-    ' Level completion logic
     If blackOrYellowCount >= p And go Then
         go = False
         Call StopAllTimers
@@ -113,7 +109,7 @@ End Sub
 ' Check if a cell is blocked (black)
 ' ====================
 Private Function IsCellBlocked(cell As Range) As Boolean
-    IsCellBlocked = (cell.Interior.color = RGB(0, 0, 0)) ' Returns True if cell is black
+    IsCellBlocked = (cell.Interior.color = RGB(0, 0, 0))
 End Function
 
 ' ====================
@@ -124,7 +120,6 @@ Private Function CountBlackOrYellowCells() As Long
     Dim count As Long
     count = 0
     
-    ' Loop through a specific range to count cells
     For Each cell In Range("S4:AT31").Cells
         If cell.Interior.color = RGB(0, 0, 0) Or cell.Interior.color = RGB(255, 255, 0) Then
             count = count + 1
@@ -142,6 +137,7 @@ Private Sub StopAllTimers()
     Call StopTimerRed
     Call StopTimerBlue
     Call StopTimerPurple
+    Call StopTimerMagenta
 End Sub
 
 ' ====================
@@ -167,14 +163,16 @@ Sub MoveRight()
     TempDirectionCol = 1
 End Sub
 
-' ====================
-' Start level and associated timers
-' ====================
 Sub StartLevel()
+    If space = True Then
     Call StartTimerRed
     Call StartTimerBlue
     Call StartTimerPurple
     Call StartTimerBrown
     Call StartTimerMagenta
     StartTimerSelection
+    space = False
+    End If
 End Sub
+
+
