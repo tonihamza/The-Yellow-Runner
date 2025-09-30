@@ -1,0 +1,111 @@
+'--- În Class Module: PurpleCellv2 ---
+Option Explicit
+
+' Properties (acelea?i ca în PurpleCell, plus moveCounter ?i movesUntilNextSpawn)
+Public PurpleCell As Range
+Public DirectionCol As Integer
+Public DirectionRow As Integer
+Public BlackColor As Long
+Public moveCounter As Integer ' Contor de mi?cari
+Public moveVertically As Boolean ' Adaugat pentru a stoca orientarea
+Public movesUntilNextSpawn As Integer ' Numarul de mi?cari pâna la urmatoarea clonare
+
+' Initialize the purple cell object
+Public Sub Initialize(startCell As Range, moveVerticallyParam As Boolean)
+    Set PurpleCell = startCell
+    BlackColor = RGB(0, 0, 0) ' Default black color
+    DirectionCol = IIf(moveVerticallyParam, 0, 1)
+    DirectionRow = IIf(moveVerticallyParam, 1, 0)
+    moveCounter = 0  ' Ini?ializeaza contorul
+    moveVertically = moveVerticallyParam ' Seteaza orientarea
+    SetMovesUntilNextSpawn ' Seteaza numarul ini?ial de mi?cari pâna la clonare
+End Sub
+
+' Move the purple cell
+Public Sub Move()
+    Dim cellToMoveTo As Range
+    Set cellToMoveTo = PurpleCell.offset(DirectionRow, DirectionCol)
+
+    If Not cellToMoveTo Is Nothing And Not IsBlocked(cellToMoveTo) Then
+        RemovePurpleConditionalFormat PurpleCell
+        Set PurpleCell = cellToMoveTo
+        ApplyPurpleConditionalFormat PurpleCell
+        moveCounter = moveCounter + 1 ' Incrementeaza contorul la fiecare mi?care
+    Else
+        ChangeDirection
+    End If
+
+    ' Verifica daca trebuie sa creeze o noua celula
+    If moveCounter >= movesUntilNextSpawn Then
+        CreateNewPurpleCell
+    End If
+End Sub
+
+' Change direction when blocked
+Private Sub ChangeDirection()
+    If IsBlocked(PurpleCell.offset(DirectionRow, DirectionCol)) Then
+        DirectionRow = -DirectionRow
+        DirectionCol = -DirectionCol
+    End If
+End Sub
+
+' Check if a cell is blocked
+Private Function IsBlocked(cell As Range) As Boolean
+    IsBlocked = (cell.Interior.color = BlackColor)
+End Function
+
+' Apply purple conditional formatting to a cell
+Private Sub ApplyPurpleConditionalFormat(cell As Range)
+    cell.FormatConditions.Delete
+    With cell.FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+        .Interior.color = RGB(128, 0, 128) ' Purple color
+    End With
+End Sub
+
+' Remove purple conditional formatting from a cell
+Private Sub RemovePurpleConditionalFormat(cell As Range)
+    cell.FormatConditions.Delete
+End Sub
+
+' Creeaza o noua celula PurpleCell
+Private Sub CreateNewPurpleCell()
+    Dim newPurpleCell As PurpleCellV2
+    Dim nextRow As Long
+    Dim nextCol As Long
+
+    Set newPurpleCell = New PurpleCellV2
+
+    'Calculeaza urmatoarea pozi?ie valida pentru noua celula
+    If Me.moveVertically Then
+      nextRow = IIf(Me.DirectionRow = 1, Me.PurpleCell.row + 1, Me.PurpleCell.row - 1)
+      nextCol = Me.PurpleCell.Column
+    Else
+      nextCol = IIf(Me.DirectionCol = 1, Me.PurpleCell.Column + 1, Me.PurpleCell.Column - 1)
+      nextRow = Me.PurpleCell.row
+    End If
+
+    'Verifica daca pozi?ia e valida ?i nu e ocupata de o celula neagra.
+     If Not Intersect(Me.PurpleCell.Parent.Range("S4:AT31"), Me.PurpleCell.Parent.Cells(nextRow, nextCol)) Is Nothing Then
+        If Me.PurpleCell.Parent.Cells(nextRow, nextCol).Interior.color <> RGB(0, 0, 0) Then
+                ' Ini?ializeaza noua celula cu pozi?ia corecta ?i direc?ia opusa
+                newPurpleCell.Initialize Me.PurpleCell.Parent.Cells(nextRow, nextCol), Not Me.moveVertically
+                ' Adauga noua celula în colec?ia PurpleCellsV2 (din modulul Levels)
+                PurpleCellsV2.Add newPurpleCell
+
+                'Aplicam formatarea la noua celula.
+                 With newPurpleCell.PurpleCell.FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+                    .Interior.color = RGB(128, 0, 128)
+                End With
+        End If
+     End If
+
+    ' Reseteaza contorul ?i seteaza urmatoarea limita de mi?cari
+    moveCounter = 0
+    SetMovesUntilNextSpawn
+
+End Sub
+
+' Seteaza numarul aleatoriu de mi?cari pâna la urmatoarea clonare
+Private Sub SetMovesUntilNextSpawn()
+    movesUntilNextSpawn = Int((300 - 50 + 1) * Rnd() + 50)  ' Numar aleatoriu între 50 ?i 300
+End Sub
