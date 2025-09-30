@@ -32,7 +32,6 @@ Public DirectionCol As Long
 Public TempDirectionRow As Long ' Temporary direction row
 Public TempDirectionCol As Long ' Temporary direction col
 Public go As Boolean
-Public space As Boolean
 
 ' Constants
 Const MoveIntervalSelection = 50 ' Time interval for each movement in milliseconds
@@ -138,6 +137,10 @@ Private Sub StopAllTimers()
     Call StopTimerBlue
     Call StopTimerPurple
     Call StopTimerMagenta
+    Call StopTimerPurpleV2
+    Call StopTimerSnake
+    Call StopTimerBigRed
+    Call StopTimerSpaceInvader
 End Sub
 
 ' ====================
@@ -164,15 +167,16 @@ Sub MoveRight()
 End Sub
 
 Sub StartLevel()
-    If space = True Then
     Call StartTimerRed
     Call StartTimerBlue
     Call StartTimerPurple
     Call StartTimerBrown
     Call StartTimerMagenta
+    Call StartTimerPurpleV2
+    Call StartTimerSnake
+    Call StartTimerBigRed
+    Call StartTimerSpaceInvader
     StartTimerSelection
-    space = False
-    End If
 End Sub
 
 
