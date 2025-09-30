@@ -1,0 +1,166 @@
+' Class module: BigRedEnemy
+
+Option Explicit
+
+' --- Properties ---
+Private pTopLeftCell As Range
+Private pEnemyArea As Range ' Întreaga zona de 10x10 a inamicului
+
+' Proprieta?ile de mi?care
+Private pDirectionKKK As Integer
+Private pDirectionLLL As Integer
+Private pBlackColor As Long
+Private pRowReached As Boolean
+Private pColReached As Boolean
+
+' --- Initialize Method ---
+Public Sub Initialize(startCell As Range, Optional startRowReached As Boolean = False)
+    ' Seteaza ancora ?i zona inamicului
+    Set pTopLeftCell = startCell
+    Set pEnemyArea = pTopLeftCell.Resize(10, 10) ' Redimensioneaza la 10x10
+    
+    ' Seteaza proprieta?ile de mi?care
+    pBlackColor = RGB(0, 0, 0)
+    pRowReached = startRowReached
+    pColReached = False
+    
+    ' Seteaza direc?iile ini?iale
+    If pRowReached Then
+        pDirectionKKK = 1
+        pDirectionLLL = -1
+    Else
+        pDirectionKKK = -1
+        pDirectionLLL = 1
+    End If
+    
+    ' Coloreaza zona inamicului la pornire
+    ApplyBigRedFormat pEnemyArea
+End Sub
+
+' --- Move Method ---
+Public Sub Move(targetCell As Range)
+    Dim nextTopLeftCell As Range
+
+    ' Logica de decizie a mi?carii ramâne neschimbata
+    If pTopLeftCell.Address <> targetCell.Address Then
+        
+        If Not pRowReached Then
+            ' Prioritatea este mi?carea pe rând (vertical)
+            If pTopLeftCell.row <> targetCell.row Then
+                If pTopLeftCell.row < targetCell.row Then
+                    Set nextTopLeftCell = pTopLeftCell.offset(1, 0) ' În jos
+                Else
+                    Set nextTopLeftCell = pTopLeftCell.offset(-1, 0) ' În sus
+                End If
+                
+                If Not IsAreaBlocked(nextTopLeftCell.Resize(10, 10)) Then
+                    PerformMoveSmooth nextTopLeftCell ' <<< MODIFICARE: Apelam noua func?ie
+                Else
+                    Set nextTopLeftCell = pTopLeftCell.offset(0, pDirectionKKK)
+                    If Not IsAreaBlocked(nextTopLeftCell.Resize(10, 10)) Then
+                        PerformMoveSmooth nextTopLeftCell ' <<< MODIFICARE
+                    Else
+                        pDirectionKKK = -pDirectionKKK
+                    End If
+                End If
+            Else
+                pRowReached = True
+                pColReached = False
+            End If
+        
+        ElseIf pRowReached And Not pColReached Then
+            ' Prioritatea este mi?carea pe coloana (orizontal)
+            If pTopLeftCell.Column <> targetCell.Column Then
+                If pTopLeftCell.Column < targetCell.Column Then
+                    Set nextTopLeftCell = pTopLeftCell.offset(0, 1) ' La dreapta
+                Else
+                    Set nextTopLeftCell = pTopLeftCell.offset(0, -1) ' La stânga
+                End If
+                
+                If Not IsAreaBlocked(nextTopLeftCell.Resize(10, 10)) Then
+                    PerformMoveSmooth nextTopLeftCell ' <<< MODIFICARE
+                Else
+                    Set nextTopLeftCell = pTopLeftCell.offset(pDirectionLLL, 0)
+                    If Not IsAreaBlocked(nextTopLeftCell.Resize(10, 10)) Then
+                        PerformMoveSmooth nextTopLeftCell ' <<< MODIFICARE
+                    Else
+                        pDirectionLLL = -pDirectionLLL
+                    End If
+                End If
+            Else
+                pColReached = True
+                pRowReached = False
+            End If
+        End If
+    End If
+End Sub
+
+' --- Helper Methods (Metode ajutatoare) ---
+
+' <<< NOUA SUBRUTINA PENTRU MI?CARE LINA >>>
+' Aceasta înlocuie?te vechea subrutina "PerformMove"
+Private Sub PerformMoveSmooth(newTopLeftCell As Range)
+    Dim areaToClear As Range
+    Dim areaToDraw As Range
+    Dim dRow As Long, dCol As Long
+
+    ' Calculeaza direc?ia de mi?care (diferen?a de o celula)
+    dRow = newTopLeftCell.row - pTopLeftCell.row
+    dCol = newTopLeftCell.Column - pTopLeftCell.Column
+
+    ' Identifica ce rând/coloana sa ?tearga ?i ce sa deseneze
+    If dRow = 1 Then ' Mi?care în JOS
+        Set areaToClear = pEnemyArea.Rows(1) ' ?terge primul rând de sus
+        Set areaToDraw = pTopLeftCell.offset(10, 0).Resize(1, 10) ' Deseneaza un rând nou jos
+    ElseIf dRow = -1 Then ' Mi?care în SUS
+        Set areaToClear = pEnemyArea.Rows(10) ' ?terge ultimul rând de jos
+        Set areaToDraw = newTopLeftCell.Resize(1, 10) ' Deseneaza un rând nou sus
+    ElseIf dCol = 1 Then ' Mi?care la DREAPTA
+        Set areaToClear = pEnemyArea.Columns(1) ' ?terge prima coloana din stânga
+        Set areaToDraw = pTopLeftCell.offset(0, 10).Resize(10, 1) ' Deseneaza o coloana noua în dreapta
+    ElseIf dCol = -1 Then ' Mi?care la STÂNGA
+        Set areaToClear = pEnemyArea.Columns(10) ' ?terge ultima coloana din dreapta
+        Set areaToDraw = newTopLeftCell.Resize(10, 1) ' Deseneaza o coloana noua în stânga
+    End If
+
+    ' Executa ?tergerea ?i desenarea doar pentru zonele identificate
+    If Not areaToClear Is Nothing And Not areaToDraw Is Nothing Then
+        RemoveBigRedFormat areaToClear
+        ApplyBigRedFormat areaToDraw
+    End If
+
+    ' Actualizeaza referin?ele interne la noua pozi?ie
+    Set pTopLeftCell = newTopLeftCell
+    Set pEnemyArea = pTopLeftCell.Resize(10, 10)
+End Sub
+
+' Verifica daca vreo celula din zona data este neagra (blocata)
+Private Function IsAreaBlocked(area As Range) As Boolean
+    Dim cell As Range
+    On Error Resume Next ' Previne erorile daca zona iese de pe foaie
+    For Each cell In area.Cells
+        If cell.Interior.color = pBlackColor Then
+            IsAreaBlocked = True
+            Exit Function
+        End If
+    Next cell
+    IsAreaBlocked = False
+    On Error GoTo 0
+End Function
+
+' Aplica formatarea condi?ionala pe o zona data
+Private Sub ApplyBigRedFormat(area As Range)
+    On Error Resume Next
+    area.FormatConditions.Delete
+    With area.FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+        .Interior.color = RGB(255, 0, 0)
+    End With
+    On Error GoTo 0
+End Sub
+
+' ?terge formatarea condi?ionala de pe o zona data
+Private Sub RemoveBigRedFormat(area As Range)
+    On Error Resume Next
+    area.FormatConditions.Delete
+    On Error GoTo 0
+End Sub
