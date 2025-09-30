@@ -9,9 +9,7 @@ Public DirectionRow As Integer
 Public BlackColor As Long
 Public moveCounter As Integer ' Count number of consecutive moves in the same direction
 
-' ====================
 ' Initialize the brown cell object
-' ====================
 Public Sub Initialize(startCell As Range)
     Set brownCell = startCell
     BlackColor = RGB(0, 0, 0) ' Default black color
@@ -22,15 +20,13 @@ Public Sub Initialize(startCell As Range)
     moveCounter = 0 ' Initialize move counter
 End Sub
 
-' ====================
 ' Move the brown cell in one of the 8 possible directions
-' ====================
 Public Sub Move()
     Dim cellToMoveTo As Range
 
     ' Calculate the next cell based on current direction
     On Error Resume Next
-    Set cellToMoveTo = brownCell.Offset(DirectionRow, DirectionCol)
+    Set cellToMoveTo = brownCell.offset(DirectionRow, DirectionCol)
     On Error GoTo 0
 
     ' Check if the next cell is within bounds and not black
@@ -51,9 +47,7 @@ Public Sub Move()
     End If
 End Sub
 
-' ====================
 ' Change direction based on surrounding cells
-' ====================
 Private Sub ChangeDirection()
     Dim directionIndex As Integer
     directionIndex = Int(8 * Rnd + 1) ' Generate a random number between 1 and 8
@@ -114,3 +108,4 @@ End Sub
 Private Sub RemoveBrownConditionalFormat(cell As Range)
     cell.FormatConditions.Delete
 End Sub
+
