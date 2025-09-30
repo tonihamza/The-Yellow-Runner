@@ -1,7 +1,8 @@
+' Modulul Levels:
 ' Public variables
 Public TimerIDRed As LongPtr
 Public TimerIDBlue As LongPtr
-Public TimerIDPurple As LongPtr ' New timer ID for purple cells
+Public TimerIDPurple As LongPtr ' Timer ID for purple cells
 Public TimerIDBrown As LongPtr
 Public RedCells As Collection ' Collection to hold all red cell objects
 Public BlueCells As Collection ' Collection to hold all blue cell objects
@@ -16,6 +17,23 @@ Public MoveIntervalPurple As Long ' Interval for purple cell timer in millisecon
 Public MoveIntervalBrown As Long ' Interval for brown cell timer in milliseconds
 Public TimerIDMagenta As LongPtr ' New timer ID for magenta cells
 Public MoveIntervalMagenta As Long ' Interval for magenta cell timer in milliseconds
+Public TimerIDSnake As LongPtr
+Public MoveIntervalSnake As Long
+Public Snakes As Collection
+Public TimerIDBigRed As LongPtr
+Public MoveIntervalBigRed As Long
+Public BigRedEnemies As Collection
+
+'--- Variabile pentru PurpleCellv2 ---
+Public TimerIDPurpleV2 As LongPtr
+Public MoveIntervalPurpleV2 As Long
+Public PurpleCellsV2 As Collection
+Public purplePosV2 As Variant
+
+'--- Variabile pentru SpaceInvader ---
+Public TimerIDSpaceInvader As LongPtr
+Public MoveIntervalSpaceInvader As Long
+Public SpaceInvaders As Collection
 
 Public p As Integer
 
@@ -23,10 +41,14 @@ Public Sub StartGame()
     ' Define variables for red, blue, purple, and brown cell counts and positions
     Dim redPos As Variant
     Dim bluePos As Variant
-    Dim purplePosH As Variant ' Horizontal purple positions
-    Dim purplePosV As Variant ' Vertical purple positions
-    Dim brownPos As Variant ' New positions for brown cells
+    Dim purplePosH As Variant
+    Dim purplePosV As Variant
+    Dim brownPos As Variant
     Dim magentaPos As Variant
+    Dim snakePos As Variant
+    Dim bigRedPos As Variant
+    Dim invaderPos As Variant
+    
     Dim i As Integer
     Dim rng As Range
 
@@ -36,14 +58,12 @@ Public Sub StartGame()
     MoveIntervalPurple = 100 ' Example: 200 milliseconds
     MoveIntervalBrown = 100 ' Example: 200 milliseconds for brown cells
     MoveIntervalMagenta = 300
-    space = True
+    MoveIntervalPurpleV2 = 100
+    MoveIntervalBigRed = 100
+    MoveIntervalSpaceInvader = 150
 
-    If level = 0 Then
-    level = 1
-    End If
-    
+    If level = 0 Then level = 1
     Call ResetGame
-    
     Range("AG31").Select
 
     ' Determine actions based on the current level
@@ -64,8 +84,8 @@ Public Sub StartGame()
             Next i
 
         Case 2
-            purplePosH = Array("AF17")
             purplePosV = Array("AF17")
+            purplePosH = Array("AF17")
             p = 584
         Case 3
             purplePosH = Array("S11", "AT23")
@@ -239,7 +259,7 @@ Public Sub StartGame()
             Next i
             magentaPos = Array(Array("R17", "AU17"), Array("R10", "AU10"), Array("R25", "AU25"))
         Case 34
-            
+            purplePosV2 = Array("S9")
         Case 35
             magentaPos = Array( _
                 Array("R4", "AU4"), _
@@ -389,20 +409,29 @@ Public Sub StartGame()
         Case 50
             magentaPos = Array(Array("R16", "AU16"), Array("R17", "AU17"), Array("R9", "AU9"), Array("R10", "AU10"), Array("R23", "AU23"), Array("R24", "AU24"))
             bluePos = Array("S9", "AT9", "S29", "AT29")
+        Case 51
+            snakePos = Array("W15") ' Pozi?ia de start pentru ?arpe
+        Case 52
+            snakePos = Array("W15", "W18") ' Pozi?ia de start pentru ?arpe
+        Case 53
+            bigRedPos = Array("W4")
+        Case 54
+            invaderPos = Array("W15")
         Case Else
             MsgBox "You finished the game!", vbExclamation
             Exit Sub
     End Select
 
     ' Call GenerateEnemy to initialize enemies based on the current level
-    GenerateEnemy redPos, bluePos, purplePosH, purplePosV, brownPos, magentaPos
+    GenerateEnemy redPos, bluePos, purplePosH, purplePosV, brownPos, magentaPos, purplePosV2, snakePos, bigRedPos, invaderPos
 End Sub
+
 Sub ResetGame()
     ' Reseteaza variabilele
     DirectionRow = 0
     DirectionCol = 0
     go = False
-    
+
     ' Opre?te toate timerele
     Call StopTimerSelection
     Call StopTimerRed
@@ -410,7 +439,9 @@ Sub ResetGame()
     Call StopTimerPurple
     Call StopTimerBrown ' Stop timer for brown cells
     Call StopTimerMagenta
-    
+    Call StopTimerPurpleV2  'Opreste timer-ul pentru PurpleV2
+    Call StopTimerSpaceInvader
+
     Range("S4:AT31").Interior.color = RGB(255, 255, 255)
     ActiveSheet.Cells.FormatConditions.Delete
     ' Resetarea culorilor celulelor sau orice alta logica necesara
@@ -423,19 +454,23 @@ End Sub
 
 
 ' Initialize the red, blue, and purple cell movements
-Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePositionsH As Variant, purplePositionsV As Variant, brownPositions As Variant, magentaPositions As Variant)
+Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePositionsH As Variant, purplePositionsV As Variant, brownPositions As Variant, magentaPositions As Variant, Optional purplePositionsV2 As Variant, Optional snakePositions As Variant, Optional bigRedPositions As Variant, Optional invaderPositions As Variant)
     Dim redCell As redCell
     Dim blueCell As blueCell
     Dim purpleCellH As PurpleCell ' Horizontal purple cell
     Dim purpleCellV As PurpleCell ' Vertical purple cell
-    Dim magentaCell As magentaCell
+    Dim MagentaCell As MagentaCell
     Dim brownCell As brownCell ' Brown cell
     Dim i As Integer
     Dim targetCell1 As Range
-    
+    Dim PurpleCellV2 As PurpleCellV2 'Pentru PurpleCellv2
+    Dim snakeObject As Snake
+    Dim bigRedEnemyObject As BigRedEnemy
+    Dim invaderObject As SpaceInvader
+
     ' Set the initial target cell to the current selection
     Set targetCell1 = ActiveCell
-    
+
     ' Clear previous collections if they exist
     On Error Resume Next
     Set RedCells = Nothing
@@ -443,27 +478,32 @@ Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePosit
     Set PurpleCells = Nothing
     Set BrownCells = Nothing
     Set MagentaCells = Nothing ' Initialize brown cell collection
-    On Error GoTo 0
-    
+    Set PurpleCellsV2 = Nothing ' Initializare colectie PurpleCellsv2.
+        On Error GoTo 0
+
     Set RedCells = New Collection
     Set BlueCells = New Collection
     Set PurpleCells = New Collection
     Set BrownCells = New Collection
     Set MagentaCells = New Collection
-    
+    Set PurpleCellsV2 = New Collection ' Ini?ializare colec?ie PurpleCellv2
+    Set Snakes = New Collection
+    Set BigRedEnemies = New Collection
+    Set SpaceInvaders = New Collection
+
     ' Check if redPositions array is not empty and initialize red cell objects
     If Not IsEmpty(redPositions) Then
         For i = LBound(redPositions) To UBound(redPositions)
-        
+
                 Set redCell = New redCell
-                redCell.Initialize Range(redPositions(i)), i Mod 2 = 0 ' Example: alternate movement directions
+                redCell.Initialize Range(redPositions(i)), IIf(i Mod 2 = 0, True, False) ' Example: alternate movement directions
                 RedCells.Add redCell
                 With Range(redPositions(i)).FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
                     .Interior.color = RGB(255, 0, 0)
                 End With
         Next i
     End If
-    
+
     ' Check if bluePositions array is not empty and initialize blue cell objects
     If Not IsEmpty(bluePositions) Then
         For i = LBound(bluePositions) To UBound(bluePositions)
@@ -475,7 +515,7 @@ Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePosit
                 End With
         Next i
     End If
-    
+
     ' Check if purplePositionsH array is not empty and initialize horizontal purple cell objects
     If Not IsEmpty(purplePositionsH) Then
         For i = LBound(purplePositionsH) To UBound(purplePositionsH)
@@ -511,14 +551,51 @@ Sub GenerateEnemy(redPositions As Variant, bluePositions As Variant, purplePosit
         Next i
     End If
     ' Check if magentaPositions array is not empty and initialize magenta cell objects
-If Not IsEmpty(magentaPositions) Then
-    For i = LBound(magentaPositions) To UBound(magentaPositions)
-        Set magentaCell = New magentaCell
-        magentaCell.Initialize magentaPositions(i) ' Initialize magenta cell with string
-        MagentaCells.Add magentaCell
-    Next i
-End If
+    If Not IsEmpty(magentaPositions) Then
+        For i = LBound(magentaPositions) To UBound(magentaPositions)
+            Set MagentaCell = New MagentaCell
+            MagentaCell.Initialize magentaPositions(i) ' Initialize magenta cell with string
+            MagentaCells.Add MagentaCell
+        Next i
+    End If
 
+    'Ini?ializeaza PurpleCellv2 objects:
+      If Not IsEmpty(purplePositionsV2) Then
+        For i = LBound(purplePositionsV2) To UBound(purplePositionsV2)
+            Dim isVertical As Boolean
+            isVertical = Not (IsEmpty(purplePositionsH) Or IsEmpty(purplePositionsV)) 'Verificam daca exista celule PurpleCell normale. Daca exista, initializam PurpleCellv2 cu directii opuse primei celule PurpleCell create.
+
+                Set PurpleCellV2 = New PurpleCellV2 ' Folose?te PurpleCellv2
+                PurpleCellV2.Initialize Range(purplePositionsV2(i)), isVertical
+                PurpleCellsV2.Add PurpleCellV2  'Adauga în colec?ia PurpleCellsV2
+                With Range(purplePositionsV2(i)).FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+                    .Interior.color = RGB(128, 0, 128)
+                End With
+        Next i
+    End If
+    
+    If Not IsEmpty(snakePositions) Then
+        For i = LBound(snakePositions) To UBound(snakePositions)
+            Set snakeObject = New Snake
+            snakeObject.Initialize Range(snakePositions(i)), IIf(i Mod 2 = 0, False, True)
+            Snakes.Add snakeObject
+        Next i
+    End If
+    
+    If Not IsEmpty(bigRedPositions) Then
+        For i = LBound(bigRedPositions) To UBound(bigRedPositions)
+            Set bigRedEnemyObject = New BigRedEnemy
+            bigRedEnemyObject.Initialize Range(bigRedPositions(i)), IIf(i Mod 2 = 0, False, True)
+            BigRedEnemies.Add bigRedEnemyObject
+        Next i
+    End If
+    If Not IsEmpty(invaderPositions) Then
+        For i = LBound(invaderPositions) To UBound(invaderPositions)
+            Set invaderObject = New SpaceInvader
+            invaderObject.Initialize Range(invaderPositions(i))
+            SpaceInvaders.Add invaderObject
+        Next i
+    End If
 End Sub
 
 
@@ -688,13 +765,148 @@ Sub TimerEventMagenta()
     Call MoveMagentaCells
 End Sub
 Sub MoveMagentaCells()
-    Dim magentaCell As magentaCell
+    Dim MagentaCell As MagentaCell
     Dim i As Integer
 
     For i = 1 To MagentaCells.count
-        Set magentaCell = MagentaCells(i)
-        magentaCell.Move
+        Set MagentaCell = MagentaCells(i)
+        MagentaCell.Move
     Next i
+End Sub
+
+'Adauga func?iile pentru timerul PurpleCellv2:
+Public Sub StartTimerPurpleV2()
+    If TimerIDPurpleV2 <> 0 Then KillTimer 0, TimerIDPurpleV2
+    TimerIDPurpleV2 = SetTimer(0, 0, MoveIntervalPurpleV2, AddressOf TimerEventPurpleV2)
+End Sub
+
+Public Sub StopTimerPurpleV2()
+    If TimerIDPurpleV2 <> 0 Then KillTimer 0, TimerIDPurpleV2
+End Sub
+
+Sub TimerEventPurpleV2()
+    On Error Resume Next
+    Call MovePurpleCellsV2
+End Sub
+
+Sub MovePurpleCellsV2()
+    Dim PurpleCellV2 As PurpleCellV2
+    Dim anyTargetReached As Boolean
+    Dim i As Integer
+
+    anyTargetReached = False
+
+    For i = 1 To PurpleCellsV2.count
+        Set PurpleCellV2 = PurpleCellsV2(i)
+        PurpleCellV2.Move
+        If PurpleCellV2.PurpleCell.Address = ActiveCell.Address Then anyTargetReached = True
+    Next i
+
+    If anyTargetReached And go = True Then
+        go = False
+        StopAllTimers
+        MsgBox "Game Over"
+        ResetGame
+        StartGame
+    End If
+End Sub
+
+Public Sub StartTimerSnake()
+    If TimerIDSnake <> 0 Then KillTimer 0, TimerIDSnake
+    MoveIntervalSnake = 150 ' Seta?i intervalul de mi?care dorit
+    TimerIDSnake = SetTimer(0, 0, MoveIntervalSnake, AddressOf TimerEventSnake)
+End Sub
+
+Public Sub StopTimerSnake()
+    If TimerIDSnake <> 0 Then KillTimer 0, TimerIDSnake
+End Sub
+
+Sub TimerEventSnake()
+    On Error Resume Next
+    Call MoveSnakes
+End Sub
+
+Sub MoveSnakes()
+    Dim snakeObject As Snake
+    Dim anyTargetReached As Boolean
+    Dim i As Integer
+
+    anyTargetReached = False
+
+    For i = 1 To Snakes.count
+        Set snakeObject = Snakes(i)
+        snakeObject.Move ActiveCell ' Muta?i ?arpele în direc?ia celulei active
+        If snakeObject.SnakeCell.Address = ActiveCell.Address Then
+            anyTargetReached = True
+        End If
+    Next i
+
+    If anyTargetReached And go = True Then
+        go = False
+        StopAllTimers
+        MsgBox "Game Over"
+        ResetGame
+        StartGame
+    End If
+End Sub
+
+Public Sub StartTimerBigRed()
+    If TimerIDBigRed <> 0 Then KillTimer 0, TimerIDBigRed
+    TimerIDBigRed = SetTimer(0, 0, MoveIntervalBigRed, AddressOf TimerEventBigRed)
+End Sub
+
+Public Sub StopTimerBigRed()
+    If TimerIDBigRed <> 0 Then KillTimer 0, TimerIDBigRed
+End Sub
+
+Sub TimerEventBigRed()
+    On Error Resume Next
+    Call MoveBigRedEnemies
+End Sub
+
+Sub MoveBigRedEnemies()
+    Dim bigRed As BigRedEnemy
+    For Each bigRed In BigRedEnemies
+        bigRed.Move ActiveCell
+        ' Pute?i adauga aici logica de coliziune daca este necesar
+    Next bigRed
+End Sub
+' Timer handling and movement logic for Space Invaders
+Public Sub StartTimerSpaceInvader()
+    If TimerIDSpaceInvader <> 0 Then KillTimer 0, TimerIDSpaceInvader
+    TimerIDSpaceInvader = SetTimer(0, 0, MoveIntervalSpaceInvader, AddressOf TimerEventSpaceInvader)
+End Sub
+
+Public Sub StopTimerSpaceInvader()
+    If TimerIDSpaceInvader <> 0 Then KillTimer 0, TimerIDSpaceInvader
+End Sub
+
+Sub TimerEventSpaceInvader()
+    On Error Resume Next
+    Call MoveSpaceInvaders
+End Sub
+
+Sub MoveSpaceInvaders()
+    Dim invader As SpaceInvader
+    Dim anyTargetReached As Boolean
+    anyTargetReached = False
+
+    For Each invader In SpaceInvaders
+        invader.Move
+        ' Verifica coliziunea cu player-ul
+        If Not Intersect(ActiveCell, invader.EnemyArea) Is Nothing Then
+            anyTargetReached = True
+            Exit For ' Ie?i din bucla daca s-a detectat coliziunea
+        End If
+    Next invader
+
+    If anyTargetReached And go = True Then
+        go = False
+        StopAllTimers
+        MsgBox "Game Over"
+        ResetGame
+        StartGame
+    End If
 End Sub
 
 ' Stop all timers
@@ -704,9 +916,14 @@ Public Sub StopAllTimers()
     StopTimerPurple
     StopTimerBrown
     StopTimerMagenta
+    StopTimerPurpleV2 'Opreste si timerul pentru PurpleCellV2
+    StopTimerSnake
+    StopTimerBigRed
+    StopTimerSpaceInvader
     Call StopTimerSelection
-    space = True
 End Sub
+
 Sub levelup()
 level = level + 1
 End Sub
+
