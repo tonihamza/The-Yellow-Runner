@@ -1,0 +1,255 @@
+Option Explicit
+
+' Properties
+Private pSnakeCell As Range ' Private backing for SnakeCell property
+Private pDirectionKKK As Integer ' Private backing for DirectionKKK property
+Private pDirectionLLL As Integer ' Private backing for DirectionLLL property
+Private pBlackColor As Long ' Private backing for BlackColor property
+Private pRowReached As Boolean ' Private backing for RowReached property
+Private pColReached As Boolean ' Private backing for ColReached property
+Private pTail() As Range  ' Private backing for the Tail array
+Private pTailLength As Integer ' Private backing for TailLength
+Private pOriginalColor As Long ' Private backing for OriginalColor property
+Private pBlueColor As Long   ' New: private variable for blue color
+Private pPurpleColor As Long ' New: private variable for purple color
+
+' ****************** Properties *********************
+
+Public Property Get SnakeCell() As Range
+    Set SnakeCell = pSnakeCell
+End Property
+
+Public Property Set SnakeCell(value As Range)
+    Set pSnakeCell = value
+End Property
+
+Public Property Get DirectionKKK() As Integer
+    DirectionKKK = pDirectionKKK
+End Property
+
+Public Property Let DirectionKKK(value As Integer)
+    pDirectionKKK = value
+End Property
+
+Public Property Get DirectionLLL() As Integer
+    DirectionLLL = pDirectionLLL
+End Property
+
+Public Property Let DirectionLLL(value As Integer)
+    pDirectionLLL = value
+End Property
+
+Public Property Get BlackColor() As Long
+    BlackColor = pBlackColor
+End Property
+
+Public Property Let BlackColor(value As Long)
+    pBlackColor = value
+End Property
+
+Public Property Get RowReached() As Boolean
+    RowReached = pRowReached
+End Property
+
+Public Property Let RowReached(value As Boolean)
+    pRowReached = value
+End Property
+
+Public Property Get ColReached() As Boolean
+    ColReached = pColReached
+End Property
+
+Public Property Let ColReached(value As Boolean)
+    pColReached = value
+End Property
+
+Public Property Get Tail() As Variant
+   Tail = pTail
+End Property
+
+Public Property Let Tail(value As Variant)
+    pTail() = value
+End Property
+
+Public Property Get TailLength() As Integer
+    TailLength = pTailLength
+End Property
+
+Public Property Let TailLength(value As Integer)
+    pTailLength = value
+End Property
+
+Public Property Get OriginalColor() As Long
+    OriginalColor = pOriginalColor
+End Property
+
+Public Property Let OriginalColor(value As Long)
+    pOriginalColor = value
+End Property
+
+Public Property Get BlueColor() As Long
+    BlueColor = pBlueColor
+End Property
+
+Public Property Let BlueColor(value As Long)
+    pBlueColor = value
+End Property
+
+Public Property Get PurpleColor() As Long
+    PurpleColor = pPurpleColor
+End Property
+
+Public Property Let PurpleColor(value As Long)
+    pPurpleColor = value
+End Property
+
+
+' Initialize the snake cell object
+Public Sub Initialize(startCell As Range, Optional startRowReached As Boolean = False)
+    Dim i As Integer ' Declare loop counter here
+
+    Set pSnakeCell = startCell
+    pBlackColor = RGB(0, 0, 0) ' Default black color
+    pRowReached = startRowReached
+    pColReached = False
+    pTailLength = 10  'Set the tail length to 10
+    pOriginalColor = RGB(255, 0, 0) ' Red color
+    pBlueColor = RGB(0, 0, 255)    ' Blue color
+    pPurpleColor = RGB(128, 0, 128) ' Purple color
+
+    ' Set directions based on RowReached status
+    If RowReached Then
+        pDirectionKKK = 1 ' Default direction to move right
+        pDirectionLLL = -1 ' Default direction to move up
+    Else
+        pDirectionKKK = -1 ' Default direction to move left
+        pDirectionLLL = 1 ' Default direction to move down
+    End If
+
+    ' Initialize the tail array
+    ReDim pTail(0 To 9)   'ReDim to 10 cells
+    For i = 0 To 9
+        Set pTail(i) = Nothing ' Initially, the tail is empty
+    Next i
+
+    ApplySnakeConditionalFormat pSnakeCell
+End Sub
+
+
+Public Sub Move(targetCell As Range)
+    Dim cellToMoveTo As Range
+
+    Call UpdateTail
+
+    If pSnakeCell.Address <> targetCell.Address Then
+        If Not pRowReached Then
+            ' Move row-wise first
+            If pSnakeCell.row <> targetCell.row Then
+                If pSnakeCell.row < targetCell.row Then
+                    Set cellToMoveTo = pSnakeCell.offset(1, 0) ' Move Down
+                Else
+                    Set cellToMoveTo = pSnakeCell.offset(-1, 0) ' Move Up
+                End If
+
+                If Not cellToMoveTo Is Nothing And cellToMoveTo.Interior.color <> pBlackColor Then
+                    Set pSnakeCell = cellToMoveTo
+                Else
+                    Set cellToMoveTo = pSnakeCell.offset(0, pDirectionKKK)
+                    If Not cellToMoveTo Is Nothing And cellToMoveTo.Interior.color <> pBlackColor Then
+                        Set pSnakeCell = cellToMoveTo
+                    Else
+                        pDirectionKKK = -pDirectionKKK
+                    End If
+                End If
+            Else
+                pRowReached = True
+                pColReached = False
+            End If
+        End If
+
+        ' If row is reached, start moving column-wise
+        If pRowReached And Not pColReached Then
+            If pSnakeCell.Column <> targetCell.Column Then
+                If pSnakeCell.Column < targetCell.Column Then
+                    Set cellToMoveTo = pSnakeCell.offset(0, 1) ' Move Right
+                Else
+                    Set cellToMoveTo = pSnakeCell.offset(0, -1) ' Move Left
+                End If
+
+                If Not cellToMoveTo Is Nothing And cellToMoveTo.Interior.color <> pBlackColor Then
+                    Set pSnakeCell = cellToMoveTo
+                Else
+                    Set cellToMoveTo = pSnakeCell.offset(pDirectionLLL, 0)
+                    If Not cellToMoveTo Is Nothing And cellToMoveTo.Interior.color <> pBlackColor Then
+                        Set pSnakeCell = cellToMoveTo
+                    Else
+                        pDirectionLLL = -pDirectionLLL
+                    End If
+                End If
+            Else
+                pColReached = True
+                pRowReached = False
+            End If
+        End If
+    End If
+
+    ApplySnakeConditionalFormat pSnakeCell
+End Sub
+
+Private Sub UpdateTail() ' Am eliminat parametrul
+    Dim i As Integer
+
+    ' ?terge formatarea de pe ultimul segment al cozii
+    If Not IsEmpty(pTail) Then
+        If Not pTail(pTailLength - 1) Is Nothing Then
+            RemoveSnakeConditionalFormat pTail(pTailLength - 1)
+        End If
+    End If
+
+    ' Muta segmentele cozii cu o pozi?ie în urma
+    If Not IsEmpty(pTail) Then
+        For i = pTailLength - 1 To 1 Step -1
+            Set pTail(i) = pTail(i - 1)
+        Next i
+    End If
+
+    ' Seteaza primul segment al cozii la pozi?ia CURENTA a capului
+    ' (înainte ca acesta sa se mute)
+    If Not IsEmpty(pTail) Then
+        Set pTail(0) = pSnakeCell
+    End If
+
+    ' Aplica formatarea pe noile segmente ale cozii
+    If Not IsEmpty(pTail) Then
+        For i = 0 To pTailLength - 1
+            If Not pTail(i) Is Nothing Then
+                If i Mod 2 = 0 Then
+                    ApplySnakeConditionalFormatWithIntensity pTail(i), pBlueColor
+                Else
+                    ApplySnakeConditionalFormatWithIntensity pTail(i), pPurpleColor
+                End If
+            End If
+        Next i
+    End If
+End Sub
+
+' Apply snake conditional formatting to a cell
+Private Sub ApplySnakeConditionalFormat(cell As Range)
+    cell.FormatConditions.Delete
+    With cell.FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+        .Interior.color = pOriginalColor ' snake color from the property
+    End With
+End Sub
+
+' Apply conditional formatting to a cell with a specific color
+Private Sub ApplySnakeConditionalFormatWithIntensity(cell As Range, color As Long)
+    cell.FormatConditions.Delete
+    With cell.FormatConditions.Add(Type:=xlExpression, Formula1:="=TRUE")
+        .Interior.color = color
+    End With
+End Sub
+
+' Remove snake conditional formatting from a cell
+Private Sub RemoveSnakeConditionalFormat(cell As Range)
+    cell.FormatConditions.Delete
+End Sub
